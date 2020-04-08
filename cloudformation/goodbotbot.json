@@ -1,0 +1,150 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+
+    "Description" : "GoodBotBot Twitter bot",
+
+    "Parameters": {
+        "ParamBotName" : {
+            "Description"           : "Screen name of the bot Twitter account",
+            "Type"                  : "String"
+        },
+        
+        "ParamReplyToName" : {
+            "Description"           : "Screen name of the Twitter account being replied to",
+            "Type"                  : "String"
+        },
+        
+        "ParamAppKey" : {
+            "Description"           : "Application consumer key",
+            "Type" : "String"
+        },
+        
+        "ParamAppSecret" : {
+            "Description"           : "Application consumer key secret",
+            "Type"                  : "String"
+        },
+        
+        "ParamUserKey" : {
+            "Description"           : "Access token for the bot Twitter account",
+            "Type"                  : "String"
+        },
+        
+        "ParamUserSecret" : {
+            "Description"           : "Access token secret",
+            "Type"                  : "String"
+        },
+        
+        "ParamApplication" : {
+            "Description"           : "The name of the application associated with this stack",
+            "Type"                  : "String",
+            "Default"               : "GoodBotBot",
+            "AllowedPattern"        : "[a-zA-Z0-9-._@]{1,255}",
+            "ConstraintDescription" : "must be a valid tag value."
+        },
+        
+        "ParamEnvironment" : {
+            "Description"           : "The environment associated with the created resources: Production, Development, Testing, QA, Staging",
+            "Type"                  : "String",
+            "Default"               : "Production",
+            "AllowedPattern"        : "[a-zA-Z0-9-._@]{1,255}",
+            "ConstraintDescription" : "must be a valid tag value."
+        }
+    },
+
+    "Resources" : {
+        
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Description" : "Execution role for the Lambda function",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": ["lambda.amazonaws.com"]
+                        },
+                        "Action": ["sts:AssumeRole"]
+                    }]
+                },
+                "Policies": [{
+                    "PolicyName": "GoodBotBot-execution-role-policy",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": ["logs:*"],
+                            "Resource": "arn:aws:logs:*:*:*" 
+                        }]
+                    }
+                }],
+                "Tags" : [
+                    {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
+                    {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
+                    {"Key": "Name",         "Value" : {"Ref" : "ParamApplication"}}
+                ]
+            }
+        },
+        
+        "LambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Handler": "index.handler",
+                "Runtime": "python3.7",
+                "MemorySize" : 128,
+                "Timeout" : 15,
+                "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"]},
+                "Code": {
+                    "ZipFile":  { "Fn::Join": ["\n", [
+                        "def handler(event, context):",
+                        "    return {",
+                        "        'statusCode'    : 200,",
+                        "        'body'          : {}",
+                        "    }"
+                    ]]}
+                },
+                "Environment" : {
+                    "Variables" : {
+                        "BOT_USER": {"Ref" : "ParamBotName"},
+                        "BOT_TARGET": {"Ref" : "ParamReplyToName"},
+                        "BOT_APP_KEY": {"Ref" : "ParamAppKey"},
+                        "BOT_APP_SECRET": {"Ref" : "ParamAppSecret"},
+                        "BOT_ACCESS_TOKEN": {"Ref" : "ParamUserKey"},
+                        "BOT_TOKEN_SECRET": {"Ref" : "ParamUserSecret"}
+                    }
+                },
+                "Tags" : [
+                    {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
+                    {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
+                    {"Key": "Name",         "Value" : {"Ref" : "ParamApplication"}}
+                ]
+            }
+        },
+        
+        "EventRuleLambdaPermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": { "Ref": "LambdaFunction" },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": { "Fn::GetAtt": ["PeriodicEventRule", "Arn"] }
+            }
+        },
+        
+        "PeriodicEventRule" : {
+            "Type" : "AWS::Events::Rule",
+            "Properties" : {
+                "Description" : "Run the lambda function periodically to poll for new tweets",
+                "State" : "ENABLED",
+                "ScheduleExpression": "rate(2 minutes)",
+                "Targets" : [{
+                    "Arn": {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
+                    "Id" : "LambdaFunction"
+                }]
+            }
+        }
+        
+    },
+
+    "Outputs" : {}
+}
