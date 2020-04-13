@@ -93,14 +93,41 @@
             }
         },
         
+        "LambdaDeployManagedPolicy" : {
+            "Type"          : "AWS::IAM::ManagedPolicy",
+            "Properties"    : {
+                "Description"       : "Managed policy for Lambda function deployment (update code, create alias,  etc.)",
+                "PolicyDocument"    : {
+                    "Version"   : "2012-10-17", 
+                    "Statement" : [
+                        {
+                            "Effect"        : "Allow",
+                            "Action"        : [
+                                "lambda:Get*",
+                                "lambda:List*",
+                                "lambda:CreateAlias",
+                                "lambda:DeleteAlias",
+                                "lambda:PublishVersion",
+                                "lambda:UpdateAlias",
+                                "lambda:UpdateFunctionCode"
+                            ],
+                            "Resource"      : [
+                                {"Fn::GetAtt": ["LambdaFunction", "Arn"]}
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        
         "LambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
-                "Handler": "index.handler",
-                "Runtime": "python3.7",
-                "MemorySize" : 128,
-                "Timeout" : 15,
-                "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"]},
+                "Handler"       : "index.handler",
+                "Runtime"       : "python3.7",
+                "MemorySize"    : 128,
+                "Timeout"       : 15,
+                "Role"          : {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"]},
                 "TracingConfig" : {
                     "Mode" : "Active"
                 },
@@ -136,27 +163,32 @@
         "EventRuleLambdaPermission": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
-                "FunctionName": { "Ref": "LambdaFunction" },
-                "Action": "lambda:InvokeFunction",
-                "Principal": "events.amazonaws.com",
-                "SourceArn": { "Fn::GetAtt": ["PeriodicEventRule", "Arn"] }
+                "FunctionName"  : {"Ref": "LambdaFunction"},
+                "Action"        : "lambda:InvokeFunction",
+                "Principal"     : "events.amazonaws.com",
+                "SourceArn"     : { "Fn::GetAtt": ["PeriodicEventRule", "Arn"] }
             }
         },
         
         "PeriodicEventRule" : {
             "Type" : "AWS::Events::Rule",
             "Properties" : {
-                "Description" : "Run the lambda function periodically to poll for new tweets",
-                "State" : "ENABLED",
-                "ScheduleExpression": "rate(18 minutes)",
+                "Description"           : "Run the lambda function periodically to poll for new tweets",
+                "State"                 : "ENABLED",
+                "ScheduleExpression"    : "rate(18 minutes)",
                 "Targets" : [{
-                    "Arn": {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
-                    "Id" : "LambdaFunction"
+                    "Arn"   : {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
+                    "Id"    : "LambdaFunction"
                 }]
             }
         }
         
     },
 
-    "Outputs" : {}
+    "Outputs" : {
+        "FunctionName" : {
+            "Description"   : "Name of the AWS Lambda function",
+            "Value"         : {"Ref": "LambdaFunction"}
+        }
+    }
 }

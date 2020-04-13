@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+STACK=GoodBotBot
 PACKAGE=goodbotbot.zip
 PACKAGE_DIR=./target
 
@@ -31,6 +32,12 @@ all: ${PACKAGE}
 clean:
 	-rm -f ${PACKAGE}
 	-rm -rf ${PACKAGE_DIR}
+
+.PHONY: deploy
+deploy: ${PACKAGE}
+	aws lambda update-function-code \
+		--function-name `aws cloudformation describe-stacks --stack-name=${STACK} --query "Stacks[0].Outputs[?OutputKey=='FunctionName'].OutputValue" --output text` \
+		--zip-file fileb://${PACKAGE}
 
 ${PACKAGE}: index.py requirements.txt Makefile
 	# Delete existing package
