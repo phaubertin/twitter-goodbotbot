@@ -1,0 +1,2 @@
+aws-xray-sdk==2.4.3
+tweepy==3.8.0

@@ -4,34 +4,38 @@
     "Description" : "GoodBotBot Twitter bot",
 
     "Parameters": {
-        "ParamBotName" : {
-            "Description"           : "Screen name of the bot Twitter account",
-            "Type"                  : "String"
-        },
-        
         "ParamReplyToName" : {
             "Description"           : "Screen name of the Twitter account being replied to",
             "Type"                  : "String"
         },
         
+        "ParamSource" : {
+            "Description"           : "Source label of target tweets. This diffenciates between tweets from the bot and normal tweets on the target account.",
+            "Type"                  : "String"
+        },
+        
         "ParamAppKey" : {
             "Description"           : "Application consumer key",
-            "Type" : "String"
+            "Type"                  : "String",
+            "NoEcho"                : true,
         },
         
         "ParamAppSecret" : {
             "Description"           : "Application consumer key secret",
-            "Type"                  : "String"
+            "Type"                  : "String",
+            "NoEcho"                : true,
         },
         
         "ParamUserKey" : {
             "Description"           : "Access token for the bot Twitter account",
-            "Type"                  : "String"
+            "Type"                  : "String",
+            "NoEcho"                : true,
         },
         
         "ParamUserSecret" : {
             "Description"           : "Access token secret",
-            "Type"                  : "String"
+            "Type"                  : "String",
+            "NoEcho"                : true,
         },
         
         "ParamApplication" : {
@@ -78,6 +82,9 @@
                         }]
                     }
                 }],
+                "ManagedPolicyArns" : [
+                    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+                ],
                 "Tags" : [
                     {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
                     {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
@@ -94,9 +101,14 @@
                 "MemorySize" : 128,
                 "Timeout" : 15,
                 "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"]},
+                "TracingConfig" : {
+                    "Mode" : "Active"
+                },
                 "Code": {
                     "ZipFile":  { "Fn::Join": ["\n", [
                         "def handler(event, context):",
+                        "    print('Hello World!')",
+                        "    ",
                         "    return {",
                         "        'statusCode'    : 200,",
                         "        'body'          : {}",
@@ -105,12 +117,12 @@
                 },
                 "Environment" : {
                     "Variables" : {
-                        "BOT_USER": {"Ref" : "ParamBotName"},
-                        "BOT_TARGET": {"Ref" : "ParamReplyToName"},
-                        "BOT_APP_KEY": {"Ref" : "ParamAppKey"},
-                        "BOT_APP_SECRET": {"Ref" : "ParamAppSecret"},
-                        "BOT_ACCESS_TOKEN": {"Ref" : "ParamUserKey"},
-                        "BOT_TOKEN_SECRET": {"Ref" : "ParamUserSecret"}
+                        "BOT_TARGET"        : {"Ref" : "ParamReplyToName"},
+                        "BOT_SOURCE"        : {"Ref" : "ParamSource"},
+                        "BOT_APP_KEY"       : {"Ref" : "ParamAppKey"},
+                        "BOT_APP_SECRET"    : {"Ref" : "ParamAppSecret"},
+                        "BOT_ACCESS_TOKEN"  : {"Ref" : "ParamUserKey"},
+                        "BOT_TOKEN_SECRET"  : {"Ref" : "ParamUserSecret"}
                     }
                 },
                 "Tags" : [
@@ -136,7 +148,7 @@
             "Properties" : {
                 "Description" : "Run the lambda function periodically to poll for new tweets",
                 "State" : "ENABLED",
-                "ScheduleExpression": "rate(2 minutes)",
+                "ScheduleExpression": "rate(18 minutes)",
                 "Targets" : [{
                     "Arn": {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
                     "Id" : "LambdaFunction"
