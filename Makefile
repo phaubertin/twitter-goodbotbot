@@ -23,15 +23,16 @@
 
 STACK=GoodBotBot
 PACKAGE=goodbotbot.zip
-PACKAGE_DIR=./target
+DEPENDENCY_DIR=./target
+DEPENDENDY_ZIP=target.zip
 
 .PHONY: all
 all: ${PACKAGE}
 
 .PHONY: clean
 clean:
-	-rm -f ${PACKAGE}
-	-rm -rf ${PACKAGE_DIR}
+	-rm -f ${DEPENDENDY_ZIP} ${PACKAGE}
+	-rm -rf ${DEPENDENCY_DIR}
 
 .PHONY: deploy
 deploy: ${PACKAGE}
@@ -39,13 +40,13 @@ deploy: ${PACKAGE}
 		--function-name `aws cloudformation describe-stacks --stack-name=${STACK} --query "Stacks[0].Outputs[?OutputKey=='FunctionName'].OutputValue" --output text` \
 		--zip-file fileb://${PACKAGE}
 
-${PACKAGE}: index.py requirements.txt Makefile
-	# Delete existing package
-	rm -f ${PACKAGE}
-	rm -rf ${PACKAGE_DIR}
+${DEPENDENDY_ZIP}: requirements.txt
+	# Delete existing dependencies
+	rm -f ${DEPENDENDY_ZIP}
+	rm -rf ${DEPENDENCY_DIR}
 
 	# Install dependencies
-	python3 -m pip install --target ${PACKAGE_DIR} -r requirements.txt
+	python3 -m pip install --target ${DEPENDENCY_DIR} -r requirements.txt
 
 	# Remove packages provided by the AWS Lambda runtime to make the deployment
 	# package smaller. The botocore package by itself makes over half the size of
@@ -66,19 +67,24 @@ ${PACKAGE}: index.py requirements.txt Makefile
 	# setuptools      41.2.0 
 	# six             1.14.0 
 	# urllib3         1.25.8 
-	rm -rf ${PACKAGE_DIR}/botocore*
-	rm -rf ${PACKAGE_DIR}/docutils*
-	rm -rf ${PACKAGE_DIR}/jmespath*
-	rm -rf ${PACKAGE_DIR}/six*
-	rm -rf ${PACKAGE_DIR}/urllib3*
+	rm -rf ${DEPENDENCY_DIR}/botocore*
+	rm -rf ${DEPENDENCY_DIR}/docutils*
+	rm -rf ${DEPENDENCY_DIR}/jmespath*
+	rm -rf ${DEPENDENCY_DIR}/six*
+	rm -rf ${DEPENDENCY_DIR}/urllib3*
 
 	# Remove __pycache__ because it contains stuff from the packages we just
 	# removed.
-	rm -rf ${PACKAGE_DIR}/__pycache__
+	rm -rf ${DEPENDENCY_DIR}/__pycache__
 
 	# Zip package
-	(cd ${PACKAGE_DIR} && zip -r ${PACKAGE} .)
-	mv ${PACKAGE_DIR}/${PACKAGE} .
+	(cd ${DEPENDENCY_DIR} && zip -r ${DEPENDENDY_ZIP} .)
+	mv ${DEPENDENCY_DIR}/${DEPENDENDY_ZIP} .
 
+# Separate rule with separate .zip file so we don't have to re-install and re-zip
+# the dependencies whenever we change the code.
+${PACKAGE}: ${DEPENDENDY_ZIP} index.py Makefile
+	cp ${DEPENDENDY_ZIP} ${PACKAGE}
+    
 	# Add code to package
 	zip -g ${PACKAGE} index.py

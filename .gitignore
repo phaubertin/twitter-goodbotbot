@@ -1,6 +1,9 @@
 # AWS Lambda deployment package
 goodbotbot.zip
 
+# Dependency package
+target.zip
+
 # ------------------------------------------------------------------------------
 # The lines below are from GitHub's default .gitignore file for a Python
 # project.
