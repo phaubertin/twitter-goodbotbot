@@ -21,11 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# The CloudFormation stack must have this name for the "deploy" target to work
+# properly.
 STACK=GoodBotBot
+
+# Final packages code and dependencies.
 PACKAGE=goodbotbot.zip
+
+# Packaged dependencies without the code.
 DEPENDENCY_DIR=./target
 DEPENDENDY_ZIP=target.zip
 
+# This is the default target. It builds the deployment package that contains
+# the application code and its dependencies.
 .PHONY: all
 all: ${PACKAGE}
 
@@ -34,6 +42,23 @@ clean:
 	-rm -f ${DEPENDENDY_ZIP} ${PACKAGE}
 	-rm -rf ${DEPENDENCY_DIR}
 
+# This target updates the code running "in the cloud". It works if the following
+# conditions are met:
+#   1) The application has been deployed using the provided CloudFormation
+#      template:
+#           cloudformation/goodbotbot.json
+#   2) When it was created, the name given to the CloudFormation stack is the
+#      one specified by the ${STACK} variable defined above.
+#   3) The AWS Command line Interface (CLI) is installed:
+#           https://aws.amazon.com/cli/
+#   4) The AWS Command line Interface (CLI) is configured correctly, with
+#      credentials and with the default region set to the one where the
+#      CloudFormation stack is running.
+#   5) The user identified by the credentials with which the AWS CLI is
+#      configured has permissions to update the code of the AWS Lambda function.
+#      For convenience, the CloudFormation stack creates an AWS IAM managed
+#      policy (resource name LambdaDeployManagedPolicy) that you can simply
+#      attach to your user to give it the correct permissions.
 .PHONY: deploy
 deploy: ${PACKAGE}
 	aws lambda update-function-code \
