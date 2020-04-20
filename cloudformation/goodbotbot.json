@@ -175,7 +175,7 @@
             "Properties" : {
                 "Description"           : "Run the lambda function periodically to poll for new tweets",
                 "State"                 : "ENABLED",
-                "ScheduleExpression"    : "rate(18 minutes)",
+                "ScheduleExpression"    : "rate(2 minutes)",
                 "Targets" : [{
                     "Arn"   : {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
                     "Id"    : "LambdaFunction"
