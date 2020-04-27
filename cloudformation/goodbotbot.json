@@ -17,25 +17,25 @@
         "ParamAppKey" : {
             "Description"           : "Application consumer key",
             "Type"                  : "String",
-            "NoEcho"                : true,
+            "NoEcho"                : true
         },
         
         "ParamAppSecret" : {
             "Description"           : "Application consumer key secret",
             "Type"                  : "String",
-            "NoEcho"                : true,
+            "NoEcho"                : true
         },
         
         "ParamUserKey" : {
             "Description"           : "Access token for the bot Twitter account",
             "Type"                  : "String",
-            "NoEcho"                : true,
+            "NoEcho"                : true
         },
         
         "ParamUserSecret" : {
             "Description"           : "Access token secret",
             "Type"                  : "String",
-            "NoEcho"                : true,
+            "NoEcho"                : true
         },
         
         "ParamApplication" : {
@@ -71,20 +71,47 @@
                         "Action": ["sts:AssumeRole"]
                     }]
                 },
+                "ManagedPolicyArns" : [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+                ],
+                "Tags" : [
+                    {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
+                    {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
+                    {"Key": "Name",         "Value" : {"Ref" : "ParamApplication"}}
+                ]
+            }
+        },
+        
+        "StateMachineRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Description" : "Execution role for the Step Function state machine",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [{"Fn::Sub": "states.${AWS::Region}.amazonaws.com"}]
+                        },
+                        "Action": ["sts:AssumeRole"]
+                    }]
+                },
                 "Policies": [{
-                    "PolicyName": "GoodBotBot-execution-role-policy",
+                    "PolicyName": "GoodBotBot-state-machine-role-policy",
                     "PolicyDocument": {
                         "Version": "2012-10-17",
                         "Statement": [{
                             "Effect": "Allow",
-                            "Action": ["logs:*"],
-                            "Resource": "arn:aws:logs:*:*:*" 
+                            "Action": [
+                                "lambda:InvokeFunction"
+                            ],
+                            "Resource": [
+                                {"Fn::GetAtt": ["LambdaFunction", "Arn"]}
+                            ]
                         }]
                     }
                 }],
-                "ManagedPolicyArns" : [
-                    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
-                ],
                 "Tags" : [
                     {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
                     {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
@@ -180,6 +207,65 @@
                     "Arn"   : {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
                     "Id"    : "LambdaFunction"
                 }]
+            }
+        },
+        
+        "GoodBotBotStateMachine" : {
+            "Type" : "AWS::StepFunctions::StateMachine",
+            "Properties" : {
+                "StateMachineType" : "STANDARD",
+                "RoleArn" : {"Fn::GetAtt" : ["StateMachineRole", "Arn"]},
+                "DefinitionString" : {"Fn::Join" : ["", [
+"{\n",
+"  \"Comment\": \"State machine for the @GoodBotBot Twitter bot that handles retries and ensures each tweet is handled at most once.\",\n",
+"  \"StartAt\": \"InitialWait\",\n",
+"  \"States\": {\n",
+"    \"InitialWait\": {\n",
+"      \"Type\": \"Wait\",\n",
+"      \"Seconds\": 20,\n",
+"      \"Next\": \"DoTweet\"\n",
+"    },\n",
+"    \"DoTweet\": {\n",
+"      \"Type\": \"Task\",\n",
+"      \"Resource\": \"", {"Fn::GetAtt": ["LambdaFunction", "Arn"]}, "\",\n",
+"      \"Retry\": [\n",
+"        {\n",
+"          \"Comment\" : \"Periodically retry about every 15 minutes (a bit longer) if rate limited or for errors that likely require human internvention. Retry for about 4 hours. Twitter rate limits reset every 15 minutes.\",\n",
+"          \"ErrorEquals\": [\n",
+"            \"RateLimitError\",\n",
+"            \"ConfigurationException\",\n",
+"            \"NoTimelineException\",\n",
+"            \"States.Timeout\"\n",
+"          ],\n",
+"          \"IntervalSeconds\": 1000,\n",
+"          \"MaxAttempts\": 15,\n",
+"          \"BackoffRate\": 1.0\n",
+"        },\n",
+"        {\n",
+"          \"Comment\": \"In case of an error reported by the Twitter client (Tweepy), retry for about 4 hours with backoff. Long initial interval to improve reliability of already replied check.\",\n",
+"          \"ErrorEquals\": [\"TweepError\"],\n",
+"          \"IntervalSeconds\": 60,\n",
+"          \"MaxAttempts\": 7,\n",
+"          \"BackoffRate\": 2.0\n",
+"        },\n",
+"        {\n",
+"          \"Comment\": \"For any other error, retry a few times with backoff.\",\n",
+"          \"ErrorEquals\": [\"States.ALL\"],\n",
+"          \"IntervalSeconds\": 5,\n",
+"          \"MaxAttempts\": 5,\n",
+"          \"BackoffRate\": 2.0\n",
+"        }\n",
+"      ],\n",
+"      \"End\": true\n",
+"    }\n",
+"  }\n",
+"}"
+                ]]},
+                "Tags" : [
+                    {"Key": "Application",  "Value" : {"Ref" : "ParamApplication"}},
+                    {"Key": "Environment",  "Value" : {"Ref" : "ParamEnvironment"}},
+                    {"Key": "Name",         "Value" : {"Ref" : "ParamApplication"}}
+                ]
             }
         }
         
