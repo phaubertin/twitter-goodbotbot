@@ -205,7 +205,10 @@
                 "ScheduleExpression"    : "rate(2 minutes)",
                 "Targets" : [{
                     "Arn"   : {"Fn::GetAtt": ["LambdaFunction", "Arn"]},
-                    "Id"    : "LambdaFunction"
+                    "Id"    : "LambdaFunction",
+                    "Input" : {"Fn::Sub" :
+                        "{\"state-machine-arn\" : \"${GoodBotBotStateMachine}\"}"
+                    }
                 }]
             }
         },
