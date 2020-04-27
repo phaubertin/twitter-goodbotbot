@@ -1,2 +1,2 @@
 # twitter-goodbotbot
-Code behind the @goodbotbot Twitter bot account
+Code behind the [@goodbotbot](https://twitter.com/GoodBotBot) Twitter bot account
