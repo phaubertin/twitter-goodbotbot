@@ -71,6 +71,21 @@
                         "Action": ["sts:AssumeRole"]
                     }]
                 },
+                "Policies": [{
+                    "PolicyName": "GoodBotBot-lambda-role-policy",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": [
+                                "states:StartExecution"
+                            ],
+                            "Resource": [
+                                {"Fn::Sub": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:GoodBotBotStateMachine-*"}
+                            ]
+                        }]
+                    }
+                }],
                 "ManagedPolicyArns" : [
                     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
                     "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
@@ -278,6 +293,14 @@
         "FunctionName" : {
             "Description"   : "Name of the AWS Lambda function",
             "Value"         : {"Ref": "LambdaFunction"}
+        },
+        "FunctionArn" : {
+            "Description"   : "ARN of the AWS Lambda function",
+            "Value"         : {"Fn::GetAtt": ["LambdaFunction", "Arn"]}
+        },
+        "StateMachineArn" : {
+            "Description"   : "ARN of the AWS Step Function state machine",
+            "Value"         : {"Ref": "GoodBotBotStateMachine"}
         }
     }
 }
