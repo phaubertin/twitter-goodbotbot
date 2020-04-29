@@ -15,6 +15,7 @@ the [@XKCDAltTextBot](https://twitter.com/XKCDAltTextBot) automatically replies
 with that comic strip's alt/title text. Other Twitter users then usually
 congratulate the bot with a "good bot" reply. This bot aims to automate the
 process of congratulating [@XKCDAltTextBot](https://twitter.com/XKCDAltTextBot).
+Because it's fun.
 
 ## How it Works
 
