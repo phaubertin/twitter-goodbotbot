@@ -92,14 +92,14 @@ once every 2 minutes.
 
 ### Step 3: Build and Upload the Deployment Package
 
-To build a Lamba
-[deployment package](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html),
-simply run ``make`` in the root of your working copy. The provided Makefile
-uses [pip](https://pypi.org/project/pip/) to install all needed dependencies in
-a temporary directory (named ``target``) inside your working copy. It then zips
-these dependencies together with the code for the Lambda function
-(``index.py``). The resulting zip file (``goodbotbot.zip``) can be uploaded to
-Lambda.
+To build a
+[deployment package](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html)
+for the Lambda function, simply run ``make`` in the root of your working copy.
+The provided Makefile uses [pip](https://pypi.org/project/pip/) to install all
+needed dependencies in a temporary directory (named ``target``) inside your
+working copy. It then zips these dependencies together with the code for the
+Lambda function (``index.py``). The resulting zip file (``goodbotbot.zip``) can
+be uploaded to Lambda.
 
 When the deployment package has been built, use the AWS Console to update the Lambda
 function created by the CloudFormation stack.
