@@ -28,7 +28,7 @@ the [Tweepy](http://docs.tweepy.org/en/latest/) library to interact with the
 A periodic
 [CloudWatch Events](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/WhatIsCloudWatchEvents.html)
 rule calls the Lambda function to poll for new tweets by the target account
-every two minutes. If a new tweet is detected, the Lambda function starts a new
+every minute. If a new tweet is detected, the Lambda function starts a new
 execution of a [Step Functions](https://aws.amazon.com/step-functions/) state
 machine. That state machine calls the Lambda function again with the tweet ID as
 argument to have it reply to the new tweet.
@@ -88,7 +88,7 @@ a simple "Hello World" Lambda function, not the final code which will be
 uploaded in the next step. If all goes well, at this point, the Lambda function
 should be logging "Hello World" in the
 [CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html)
-once every 2 minutes.
+once every minute.
 
 ### Step 3: Build and Upload the Deployment Package
 
