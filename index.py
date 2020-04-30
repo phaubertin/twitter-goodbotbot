@@ -394,6 +394,15 @@ def reply_to_tweet(api, tweet_id, dry_run):
     
     print_tweet(tweet)
     
+    # When this function returns retval, this return value is propagated by the
+    # Lambda handler and becomes the return value of the Lambda function.
+    retval = {
+        'tweet-id'  : tweet_id,
+        'dry-run'   : dry_run
+    }
+    
+    # Choose a random reply from MESSAGES that was not used recently. Returns
+    # None if the tweet was already replied to by this bot.
     reply = choose_reply(api, tweet)
     
     if not reply:
@@ -410,6 +419,11 @@ def reply_to_tweet(api, tweet_id, dry_run):
             )
             
             print('Reply tweet sent.')
+            
+            # Add the reply text to the return value. 
+            retval['reply-tweet'] = reply
+    
+    return retval
 
 def run_state_machine(state_arn, tweet_id):
     """Invoke Step Function state machine
@@ -444,6 +458,8 @@ def handler(event, context):
     dry_run     = event.get('dry-run',  False)
     
     if tweet_id is None:
+        # This branch is called by the periodic event rule for polling. It does
+        # not have a return value.
         tweet = choose_candidate_tweet(api, config)
         
         if state_arn is None:
@@ -451,8 +467,11 @@ def handler(event, context):
         elif tweet is not None:
             run_state_machine(state_arn, tweet.id_str)
     else:
+        # This branch is called by the Step Functions state machine to reply to
+        # a specific tweet. It has a return value that contains, among other
+        # things, the text of the reply tweet if one is sent.
         print('Tweet ID argument: ' + tweet_id)        
-        reply_to_tweet(api, tweet_id, dry_run)
+        return reply_to_tweet(api, tweet_id, dry_run)
 
 def main(argv):
 
