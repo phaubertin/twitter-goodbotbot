@@ -103,3 +103,11 @@ be uploaded to Lambda.
 
 When the deployment package has been built, use the AWS Console to update the Lambda
 function created by the CloudFormation stack.
+
+## Credit
+
+The robot avatar for this project and the
+[@GoodBotBot](https://twitter.com/GoodBotBot) Twitter bot account is derived
+from
+[this public domain robot SVG](https://commons.wikimedia.org/wiki/File:Kawaii_robot_power_clipart.svg)
+by [Marielle Volz](https://commons.wikimedia.org/wiki/User:Mvolz).
