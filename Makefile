@@ -21,50 +21,104 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# The CloudFormation stack must have this name for the "push" target to work
-# properly.
-STACK=GoodBotBot
-
-# Final packages code and dependencies.
+# Deployment package for AWS Lambda function: final packaged code and
+# dependencies.
 PACKAGE=goodbotbot.zip
 
-# Packaged dependencies without the code.
+# Packaged dependencies without the code. Having a separate zip file for the
+# dependencies speeds up the build when only the code, not the dependencies
+# has changed.
 DEPENDENCY_DIR=./target
 DEPENDENDY_ZIP=target.zip
 
-# This is the default target. It builds the deployment package that contains
-# the application code and its dependencies.
+# Name of the virtual Python environment for running locally (poll target). The
+# virtual environment is not involved in any way when building the deployment
+# package.
+PYTHON_VENV=venv
+
+# The presence of this file indicates the virtual environment is completely
+# configured. Its modified time checked against the one for requirements.txt
+# allows make to confirm that the virtual environment is up to date.
+PYTHON_VENV_FILE=${PYTHON_VENV}/uptodate.txt
+
+# Target-specific configuration files (poll and push targets).
+POLL_CONFIG=poll.conf.sh
+PUSH_CONFIG=push.conf.sh
+
+# This is the default target. It builds the AWS Lambda deployment package that
+# contains the application code and its dependencies.
 .PHONY: all
 all: ${PACKAGE}
 
+# Cleanup target.
 .PHONY: clean
 clean:
-	-rm -f ${DEPENDENDY_ZIP} ${PACKAGE}
-	-rm -rf ${DEPENDENCY_DIR}
+	-rm -f ${DEPENDENDY_ZIP} ${PACKAGE} ${PYTHON_VENV_FILE}
+	-rm -rf ${DEPENDENCY_DIR} ${PYTHON_VENV}
 
-# This target updates the code running "in the cloud". It works if the following
+.PHONY: distclean
+distclean: clean
+	-rm -f ${POLL_CONFIG} ${PUSH_CONFIG}
+
+# This target updates the code running in AWS Lambda. It works if the following
 # conditions are met:
 #   1) The application has been deployed using the provided CloudFormation
 #      template:
 #           cloudformation/goodbotbot.json
-#   2) When it was created, the name given to the CloudFormation stack is the
-#      one specified by the ${STACK} variable defined above.
-#   3) The AWS Command line Interface (CLI) is installed:
+#   2) The AWS Command line Interface (CLI) is installed:
 #           https://aws.amazon.com/cli/
-#   4) The AWS Command line Interface (CLI) is configured correctly, with
-#      credentials and with the default region set to the one where the
-#      CloudFormation stack is running.
-#   5) The user identified by the credentials with which the AWS CLI is
+#   3) The AWS Command line Interface (CLI) is configured correctly, with
+#      credentials.
+#   4) The user identified by the credentials with which the AWS CLI is
 #      configured has permissions to update the code of the AWS Lambda function.
-#      For convenience, the CloudFormation stack creates an AWS IAM managed
-#      policy (resource name LambdaDeployManagedPolicy) that you can simply
-#      attach to your user to give it the correct permissions.
+#      For convenience, the CloudFormation stack creates an IAM managed policy
+#      (resource name LambdaDeployManagedPolicy) that you can simply attach to
+#      your IAM user to give it the correct permissions.
+#
+# The first time you run this target, you are prompted for the name of your
+# CloudFormation stack and for the AWS region in which it resides. This
+# information is remembered in configuration file ${PUSH_CONFIG}.
 .PHONY: push
-push: ${PACKAGE}
+push: ${PACKAGE} push.conf.sh
+	(source ./${PUSH_CONFIG}; \
 	aws lambda update-function-code \
-		--function-name `aws cloudformation describe-stacks --stack-name=${STACK} --query "Stacks[0].Outputs[?OutputKey=='FunctionName'].OutputValue" --output text` \
-		--zip-file fileb://${PACKAGE}
+		--region=$$REGION \
+        --function-name `aws cloudformation describe-stacks --region=$$REGION --stack-name=$$STACK \
+                --query "Stacks[0].Outputs[?OutputKey=='FunctionName'].OutputValue" --output text` \
+		--zip-file fileb://${PACKAGE} | grep -v VARIABLES)
 
+${PUSH_CONFIG}:
+	./config.sh push $@
+
+# This targets runs the code locally to check if there is a new tweet that has
+# not yet been replied to. Output is the same as the log output of the AWS
+# Lambda function, but his will not send any tweet or check periodically. This
+# is a punctual check.
+#
+# The first time you run this target, you are prompted for configuration
+# information including the required Twitter credentials. This information is
+# remembered in the file ${POLL_CONFIG}.
+#
+# The  first time you run this target, the Python virtual environment is built,
+# which takes about a minute. Python packages are downloaded as needed.
+.PHONY: poll
+poll: ${POLL_CONFIG} venv
+	(source ./${POLL_CONFIG}; \
+	 ${PYTHON_VENV}/bin/python index.py)
+
+${POLL_CONFIG}:
+	./config.sh poll $@
+    
+.PHONY: venv
+venv: ${PYTHON_VENV_FILE}
+
+${PYTHON_VENV_FILE}: requirements.txt
+	virtualenv ${PYTHON_VENV}
+	${PYTHON_VENV}/bin/python -m pip install -r requirements.txt
+	touch $@
+
+# This target builds the dependency package. Python packages are downloaded as
+# needed.
 ${DEPENDENDY_ZIP}: requirements.txt
 	# Delete existing dependencies
 	rm -f ${DEPENDENDY_ZIP}
@@ -106,8 +160,8 @@ ${DEPENDENDY_ZIP}: requirements.txt
 	(cd ${DEPENDENCY_DIR} && zip -r ${DEPENDENDY_ZIP} .)
 	mv ${DEPENDENCY_DIR}/${DEPENDENDY_ZIP} .
 
-# Separate rule with separate .zip file so we don't have to re-install and re-zip
-# the dependencies whenever we change the code.
+# Separate rule with separate .zip file so we don't have to re-install and
+# re-zip the dependencies whenever we change the code.
 ${PACKAGE}: ${DEPENDENDY_ZIP} index.py Makefile
 	cp ${DEPENDENDY_ZIP} ${PACKAGE}
     

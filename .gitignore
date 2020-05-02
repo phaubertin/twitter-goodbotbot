@@ -4,6 +4,11 @@ goodbotbot.zip
 # Dependency package
 target.zip
 
+# Local configuration files
+poll.conf.sh
+push.conf.sh
+configtmpfile
+
 # ------------------------------------------------------------------------------
 # The lines below are from GitHub's default .gitignore file for a Python
 # project.
