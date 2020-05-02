@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# The CloudFormation stack must have this name for the "deploy" target to work
+# The CloudFormation stack must have this name for the "push" target to work
 # properly.
 STACK=GoodBotBot
 
@@ -59,8 +59,8 @@ clean:
 #      For convenience, the CloudFormation stack creates an AWS IAM managed
 #      policy (resource name LambdaDeployManagedPolicy) that you can simply
 #      attach to your user to give it the correct permissions.
-.PHONY: deploy
-deploy: ${PACKAGE}
+.PHONY: push
+push: ${PACKAGE}
 	aws lambda update-function-code \
 		--function-name `aws cloudformation describe-stacks --stack-name=${STACK} --query "Stacks[0].Outputs[?OutputKey=='FunctionName'].OutputValue" --output text` \
 		--zip-file fileb://${PACKAGE}
