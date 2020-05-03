@@ -1,5 +1,8 @@
 # twitter-goodbotbot
-Code behind the [@GoodBotBot](https://twitter.com/GoodBotBot) Twitter bot account
+
+Code behind the [@GoodBotBot](https://twitter.com/GoodBotBot) Twitter bot account.
+
+<img src="https://raw.githubusercontent.com/phaubertin/twitter-goodbotbot/master/img/goodbotbot.png" alt="Robot picture" width="100px">
 
 ## What Is This?
 
@@ -106,7 +109,7 @@ function created by the CloudFormation stack.
 
 ## Credit
 
-The robot avatar for this project and the
+The robot picture for this project and for the
 [@GoodBotBot](https://twitter.com/GoodBotBot) Twitter bot account is derived
 from
 [this public domain robot SVG](https://commons.wikimedia.org/wiki/File:Kawaii_robot_power_clipart.svg)
