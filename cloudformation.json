@@ -27,7 +27,7 @@
         },
         
         "ParamUserKey" : {
-            "Description"           : "Access token for the bot Twitter account",
+            "Description"           : "Access token for your bot Twitter account",
             "Type"                  : "String",
             "NoEcho"                : true
         },
@@ -36,6 +36,59 @@
             "Description"           : "Access token secret",
             "Type"                  : "String",
             "NoEcho"                : true
+        }
+    },
+    
+    "Metadata" : {
+        "AWS::CloudFormation::Interface" : {
+            "ParameterGroups" : [
+                {
+                    "Label" : {
+                        "default" : "Target Bot Information"
+                    },
+                    "Parameters" : [
+                        "ParamReplyToName",
+                        "ParamSource"
+                    ]
+                },
+                {
+                    "Label" : {
+                        "default" : "Twitter Credentials"
+                    },
+                    "Parameters" : [
+                        "ParamAppKey",
+                        "ParamAppSecret",
+                        "ParamUserKey",
+                        "ParamUserSecret"
+                    ]
+                }
+            ],
+            
+            "ParameterLabels" : {
+                "ParamReplyToName" : {
+                    "default" : "Target Screen Name"
+                },
+                
+                "ParamSource" : {
+                    "default" : "Target Source Label"
+                },
+                
+                "ParamAppKey" : {
+                    "default" : "Application Consumer Key"
+                },
+                
+                "ParamAppSecret" : {
+                    "default" : "Application Secret"
+                },
+                
+                "ParamUserKey" : {
+                    "default" : "Access Token"
+                },
+                
+                "ParamUserSecret" : {
+                    "default" : "Access Token Secret"
+                }
+            }
         }
     },
 
