@@ -254,6 +254,11 @@ def print_rate_limit(response):
         reset
     ))
 
+def print_header(response, header):
+    """Print a response header."""
+    
+    print('%s: %s' % (header, response.headers.get(header, '??')))
+
 def get_latest_candidate_tweet(api, config):
     """Find the latest candidate tweet.
     
@@ -270,6 +275,7 @@ def get_latest_candidate_tweet(api, config):
     
     tweets = api.user_timeline(screen_name=config['target'], count=20)
     print_rate_limit(api.last_response)
+    print_header(api.last_response, 'last-modified')
     
     for tweet in tweets:
         if tweet.author.screen_name != config['target']:
@@ -435,13 +441,16 @@ def run_state_machine(state_arn, tweet_id):
        invoked multiple times concurrently.
     """
 
-    client = boto3.client('stepfunctions')
+    client      = boto3.client('stepfunctions')
+    execution   = 'GoodBotBot-tweet-id-' + tweet_id
+    
+    print('Execution name: ' + execution)
     
     client.start_execution(
         stateMachineArn = state_arn,
         # Generating a name that contains the tweet ID ensures the state machine
         # will be run only once for this tweet by the bot.
-        name            = 'GoodBotBot-tweet-id-' + tweet_id,
+        name            = execution,
         input           = json.dumps({
             'tweet-id' : tweet_id
         })
