@@ -82,6 +82,7 @@ MESSAGES = frozenset([
     'Sublime bot.',
     'Superb bot.',
     'Wonderful bot.',
+    'The best bot.',
     'Thank you for your assiduity.',
     'Thank you for your conscientiousness.',
     'Thank you for your diligence.',
