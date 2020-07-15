@@ -87,7 +87,6 @@ MESSAGES = frozenset([
     'Thank you for your conscientiousness.',
     'Thank you for your diligence.',
     'Thank you for your generous effort.',
-    'Thank you for your service.',
     'Thanks!',
     'Much thanks.',
     'Thanks so much.',
