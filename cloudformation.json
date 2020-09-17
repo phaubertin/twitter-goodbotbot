@@ -158,7 +158,10 @@
                             ]
                         }]
                     }
-                }]
+                }],
+                "ManagedPolicyArns" : [
+                    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+                ]
             }
         },
         
@@ -255,6 +258,9 @@
             "Properties" : {
                 "StateMachineType" : "STANDARD",
                 "RoleArn" : {"Fn::GetAtt" : ["StateMachineRole", "Arn"]},
+                "TracingConfiguration" : {
+                    "Enabled" : true
+                },
                 "DefinitionString" : {"Fn::Join" : ["", [
 "{\n",
 "  \"Comment\": \"State machine for the @GoodBotBot Twitter bot that handles retries and ensures each tweet is handled at most once.\",\n",
