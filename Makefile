@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (c) 2020 Philippe Aubertin
 # All rights reserved.
 # 
