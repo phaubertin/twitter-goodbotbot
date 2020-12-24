@@ -266,7 +266,7 @@ def get_latest_candidate_tweet(api, config):
     - Be from the correct user/bot account.
     - Have the correct source (i.e. it must have been posted by the bot).
     - Not be a retweet.
-    - Contain the text "Alt/title text:"
+    - Contain the text "Alt text @"
     
     Arguments:
     api -- Tweepy API object
@@ -287,7 +287,7 @@ def get_latest_candidate_tweet(api, config):
         if hasattr(tweet, 'retweet_status') and tweet.retweet_status:
             continue
         
-        if 'Alt/title text:' not in tweet.text:
+        if 'Alt text @' not in tweet.text:
             continue
             
         return tweet
