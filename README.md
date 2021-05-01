@@ -6,7 +6,7 @@ Code behind the [@GoodBotBot](https://twitter.com/GoodBotBot) Twitter bot accoun
 
 ## What Is This?
 
-This Twitter bot polls the Twitter API for automatic tweets by specific bot
+This Twitter bot polls the Twitter API for automatic tweets by a specific bot
 account and replies to each tweet with a congratulatory message such as "good
 job" or "good bot".
 
