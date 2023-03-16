@@ -196,7 +196,8 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Handler"       : "index.handler",
-                "Runtime"       : "python3.7",
+                "Runtime"       : "python3.9",
+                "Architectures"  : ["arm64"],
                 "MemorySize"    : 128,
                 "Timeout"       : 15,
                 "Role"          : {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"]},
